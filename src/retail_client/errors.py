@@ -1,8 +1,7 @@
 """Exception hierarchy raised by the client.
 
 Everything below is a subclass of RetailClientError, so callers can catch the
-base type and not worry about the rest. The HTTP-mapped errors carry the
-status code and (when the API bothers to send one) a parsed body.
+base type and not worry about the rest.
 """
 
 from typing import Any
@@ -21,12 +20,11 @@ class RequestTimeoutError(RetailClientError):
 
 
 class APIError(RetailClientError):
-    """The API answered, but with a status we treat as a failure."""
+    """The API answered with a status we treat as a failure."""
 
-    def __init__(self, status_code: int, message: str, *, details: Any = None) -> None:
+    def __init__(self, status_code: int, message: str, details: Any = None) -> None:
         super().__init__(f"{status_code}: {message}")
         self.status_code = status_code
-        self.message = message
         self.details = details
 
 
