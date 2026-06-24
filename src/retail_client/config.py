@@ -27,7 +27,7 @@ class ClientConfig:
     def from_env(cls) -> "ClientConfig":
         timeout_raw = os.environ.get("GOREST_TIMEOUT")
         return cls(
-            base_url=os.envirClientConfigon.get("GOREST_BASE_URL", DEFAULT_BASE_URL),
+            base_url=os.environ.get("GOREST_BASE_URL", DEFAULT_BASE_URL),
             token=os.environ.get("GOREST_TOKEN"),
             timeout=float(timeout_raw) if timeout_raw else DEFAULT_TIMEOUT,
         )
