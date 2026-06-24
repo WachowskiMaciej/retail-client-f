@@ -1,3 +1,4 @@
+import contextlib
 import os
 from collections.abc import Iterator
 
@@ -14,7 +15,6 @@ from retail_client import (
     UserCreate,
 )
 from retail_client.errors import NotFoundError
-
 
 _fake = Faker()
 
@@ -49,10 +49,8 @@ def workers(client: RetailClient):
     yield make
 
     for user_id in created:
-        try:
+        with contextlib.suppress(NotFoundError):
             client.delete_user(user_id)
-        except NotFoundError:
-            pass
 
 
 @pytest.fixture
@@ -67,7 +65,5 @@ def tasks(client: RetailClient):
     yield make
 
     for task_id in created:
-        try:
+        with contextlib.suppress(NotFoundError):
             client.delete_task(task_id)
-        except NotFoundError:
-            pass

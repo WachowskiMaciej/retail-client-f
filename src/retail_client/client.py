@@ -32,14 +32,13 @@ class RetailClient:
     def __exit__(self, *args: object) -> None:
         self.close()
 
-    def list_users(self, *, page: int = 1, per_page: int = 20) -> list[User]:
+    def list_users(self, page: int = 1, per_page: int = 20) -> list[User]:
         """Unauthenticated read."""
         response = self._http.request("GET", "/users", params={"page": page, "per_page": per_page})
         return [User.model_validate(item) for item in response.json()]
 
     def get_user(self, user_id: int) -> User:
-        """Unauthenticated read."""
-        response = self._http.request("GET", f"/users/{user_id}")
+        response = self._http.request("GET", f"/users/{user_id}", authenticated=True)
         return User.model_validate(response.json())
 
     def create_user(self, data: UserCreate) -> User:
@@ -50,7 +49,9 @@ class RetailClient:
         self._http.request("DELETE", f"/users/{user_id}", authenticated=True)
 
     def list_user_tasks(self, user_id: int) -> list[Task]:
-        response = self._http.request("GET", f"/users/{user_id}/todos")
+        response = self._http.request(
+            "GET", "/todos", params={"user_id": user_id}, authenticated=True
+        )
         return [Task.model_validate(item) for item in response.json()]
 
     def create_task(self, user_id: int, data: TaskCreate) -> Task:
