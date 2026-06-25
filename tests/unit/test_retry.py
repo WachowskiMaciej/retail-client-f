@@ -50,7 +50,7 @@ def test_backs_off_exponentially_between_retries(make_executor: ExecutorFactory)
 
     executor.request("GET", "/users")
 
-    assert delays == [0.5, 1.0]  # 0.5 * 2**0, then 0.5 * 2**1
+    assert delays == [0.5, 1.0]
 
 
 def test_retries_on_timeout_then_raises_timeout_error(make_executor: ExecutorFactory) -> None:
@@ -63,3 +63,17 @@ def test_retries_on_timeout_then_raises_timeout_error(make_executor: ExecutorFac
         executor.request("GET", "/users")
 
     assert len(delays) == 1
+
+def test_retry_after_mechanism(make_executor: ExecutorFactory) -> None:
+    executor, delays = make_executor(
+        [
+            httpx.Response(429, headers={"Retry-After": "2"}),
+            httpx.Response(429, headers={"Retry-After": "2"}),
+            httpx.Response(200, json={})
+        ],
+        retry=RetryPolicy(max_attempts=3, base_delay_seconds=0.5, multiplier=2.0),
+    )
+
+    executor.request("GET", "/users")
+
+    assert delays == [2.0, 2.0]
