@@ -63,47 +63,58 @@ def test_list_user_tasks_returns_typed_models() -> None:
 @respx.mock
 def test_create_task_serializes_enum_and_datetime() -> None:
     due = datetime(2026, 7, 1, 9, 30)
+    preconfigued_due_on = "2026-07-01T09:30:00"
+    task_title = "Restock aisle 4"
+    task_state = "pending"
+    task_id = 10
+    user_id = 1
+
     route = respx.post(f"{BASE}/users/1/todos").mock(
         return_value=httpx.Response(
             201,
             json={
-                "id": 10,
-                "user_id": 1,
-                "title": "Restock aisle 4",
-                "due_on": "2026-07-01T09:30:00",
-                "status": "pending",
+                "id": task_id,
+                "user_id": user_id,
+                "title": task_title,
+                "due_on": preconfigued_due_on,
+                "status": task_state,
             },
         )
     )
 
     with RetailClient(ClientConfig(token="t")) as client:
         task = client.create_task(
-            1, TaskCreate(title="Restock aisle 4", due_on=due, status=TaskStatus.pending)
+            user_id, TaskCreate(title=task_title, due_on=due, status=TaskStatus.pending)
         )
     sent = json.loads(route.calls.last.request.content)
-    assert sent["status"] == "pending"
-    assert sent["due_on"].startswith("2026-07-01T09:30:00")
+    assert sent["status"] == task_state
+    assert sent["due_on"].startswith(preconfigued_due_on)
     assert isinstance(task, Task)
-    assert task.id == 10
+    assert task.id == task_id
 
 
 @respx.mock
 def test_create_task_omits_optional_due_on_when_not_set() -> None:
+    task_title = "Count till"
+    task_state = "pending"
+    task_id = 11
+    user_id = 1
+
     route = respx.post(f"{BASE}/users/1/todos").mock(
         return_value=httpx.Response(
             201,
             json={
-                "id": 11,
-                "user_id": 1,
-                "title": "Count till",
+                "id": task_id,
+                "user_id": user_id,
+                "title": task_title,
                 "due_on": None,
-                "status": "pending",
+                "status": task_state,
             },
         )
     )
 
     with RetailClient(ClientConfig(token="t")) as client:
-        client.create_task(1, TaskCreate(title="Count till"))
+        client.create_task(user_id, TaskCreate(title=task_title))
 
     sent = json.loads(route.calls.last.request.content)
     assert "due_on" not in sent
@@ -111,24 +122,29 @@ def test_create_task_omits_optional_due_on_when_not_set() -> None:
 
 @respx.mock
 def test_complete_task_patches_status_to_completed() -> None:
+    task_title = "Sweep"
+    task_state = "completed"
+    task_id = 12
+    user_id = 1
+
     route = respx.patch(f"{BASE}/todos/12").mock(
         return_value=httpx.Response(
             200,
             json={
-                "id": 12,
-                "user_id": 1,
-                "title": "Sweep",
+                "id": task_id,
+                "user_id": user_id,
+                "title": task_title,
                 "due_on": None,
-                "status": "completed",
+                "status": task_state,
             },
         )
     )
 
     with RetailClient(ClientConfig(token="t")) as client:
-        task = client.complete_task(12)
+        task = client.complete_task(task_id)
 
     sent = json.loads(route.calls.last.request.content)
-    assert sent == {"status": "completed"}
+    assert sent == {"status": task_state}
     assert task.status is TaskStatus.completed
 
 
