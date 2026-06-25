@@ -1,5 +1,7 @@
 import time
 from collections.abc import Callable
+from datetime import UTC, datetime
+from email.utils import parsedate_to_datetime
 from typing import Any
 
 import httpx
@@ -50,16 +52,23 @@ class HttpExecutor:
             except httpx.TimeoutException:
                 last_exc = RequestTimeoutError(f"request to {path} timed out")
                 if attempt < self._retry.max_attempts:
-                    self._sleep(self._retry.delay_seconds)
+                    self._sleep(self._retry.compute_delay_seconds(attempt))
                 continue
             except httpx.TransportError as exc:
                 last_exc = TransportError(f"could not reach {path}: {exc}")
                 if attempt < self._retry.max_attempts:
-                    self._sleep(self._retry.delay_seconds)
+                    self._sleep(self._retry.compute_delay_seconds(attempt))
                 continue
 
             if self._should_retry(response.status_code) and attempt < self._retry.max_attempts:
-                self._sleep(self._retry.delay_seconds)
+                server_waiting_time = _retry_after_seconds(response)
+                delay = (
+                    server_waiting_time
+                    if server_waiting_time is not None
+                    else self._retry.compute_delay_seconds(attempt)
+                )
+                delay = min(delay, self._retry.max_delay_seconds)
+                self._sleep(delay)
                 continue
             if response.is_success:
                 return response
@@ -116,3 +125,19 @@ def _extract_message(details: Any) -> str | None:
         if isinstance(first, dict) and {"field", "message"}.issubset(first):
             return f"{first['field']} {first['message']}"
     return None
+
+
+def _retry_after_seconds(response: httpx.Response) -> float | None:
+    raw = response.headers.get("Retry-After")
+    if not raw:
+        return None
+    try:
+        return float(raw)
+    except ValueError:
+        pass
+    try:
+        when = parsedate_to_datetime(raw)
+    except (TypeError, ValueError):
+        return None
+    now = datetime.now(UTC)
+    return max(0.0, (when - now).total_seconds())

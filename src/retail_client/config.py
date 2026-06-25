@@ -12,8 +12,14 @@ class RetryPolicy:
     # Retry rate limiting and transient 5xx; wait a fixed delay between tries.
     # Other 4xx are never retried - they won't fix themselves.
     max_attempts: int = 3
-    delay_seconds: float = 1.0
+    base_delay_seconds: float = 1.0
+    max_delay_seconds: float = 30.0
+    multiplier: float = 2.0
     retry_statuses: frozenset[int] = frozenset({429, 500, 502, 503, 504})
+
+    def compute_delay_seconds(self, attempt: int) -> float:
+        delay = self.base_delay_seconds * (self.multiplier ** (attempt - 1))
+        return min(delay, self.max_delay_seconds)
 
 
 @dataclass(frozen=True)

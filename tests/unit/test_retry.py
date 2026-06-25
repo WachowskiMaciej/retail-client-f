@@ -42,15 +42,15 @@ def test_does_not_retry_client_errors(make_executor: ExecutorFactory) -> None:
     assert delays == []
 
 
-def test_waits_a_fixed_delay_between_retries(make_executor: ExecutorFactory) -> None:
+def test_backs_off_exponentially_between_retries(make_executor: ExecutorFactory) -> None:
     executor, delays = make_executor(
         [httpx.Response(503), httpx.Response(503), httpx.Response(200, json={})],
-        retry=RetryPolicy(max_attempts=3, delay_seconds=0.5),
+        retry=RetryPolicy(max_attempts=3, base_delay_seconds=0.5, multiplier=2.0),
     )
 
     executor.request("GET", "/users")
 
-    assert delays == [0.5, 0.5]  # same wait each time
+    assert delays == [0.5, 1.0]  # 0.5 * 2**0, then 0.5 * 2**1
 
 
 def test_retries_on_timeout_then_raises_timeout_error(make_executor: ExecutorFactory) -> None:
