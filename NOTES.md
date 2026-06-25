@@ -18,6 +18,7 @@
 - Structured logging of requests and retries via the `logging` module
 - Parallel integration test runs with `pytest-xdist`
 - GitHub Actions CI running unit tests on every push
+- Fix GH commit messages, introduce type of commit like feat:, fix: test:
 
 ## Where LLM assistance helped and where it misled
 
