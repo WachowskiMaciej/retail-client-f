@@ -31,7 +31,7 @@ retail_client = ["py.typed"]
 [tool.pytest.ini_options]
 # The default test command runs unit tests only. Integration tests run via a separate command
 # Integration tests run via `-m integration`.
-#addopts = "-m 'not integration' --strict-markers" #
+addopts = "-m 'not integration' --strict-markers" #
 testpaths = ["tests"]
 markers = [
     "integration: hits the real GoREST API; requires GOREST_TOKEN",

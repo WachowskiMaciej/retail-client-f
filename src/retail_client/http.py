@@ -99,8 +99,6 @@ class HttpExecutor:
 
 
 def _safe_json_return(response: httpx.Response) -> Any:
-    # A failure body is best-effort. If it isn't JSON we just return None
-    # rather than masking the original error with a decode error.
     try:
         return response.json()
     except ValueError:

@@ -3,7 +3,7 @@ their tasks (todos).
 
 The `*Create` models are the input side - what a caller hands us. The plain
 models are the output side - what the API hands back, including server-set
-fields like `id`.
+fields like `id`. AI generated.
 """
 
 from datetime import datetime
