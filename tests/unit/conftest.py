@@ -1,4 +1,5 @@
 from collections.abc import Callable
+from dataclasses import dataclass
 
 import httpx
 import pytest
@@ -6,8 +7,15 @@ import pytest
 from retail_client.config import RetryPolicy
 from retail_client.http import HttpExecutor
 
+
+@dataclass
+class ExecutorSetup:
+    executor: HttpExecutor
+    delays: list[float]
+
+
 HandlerItem = httpx.Response | Exception
-ExecutorFactory = Callable[..., tuple[HttpExecutor, list[float]]]
+ExecutorFactory = Callable[..., ExecutorSetup]
 
 
 class RecordingSleep:
@@ -24,7 +32,7 @@ def make_executor() -> ExecutorFactory:
         responses: list[HandlerItem],
         retry: RetryPolicy | None = None,
         token: str | None = "test-token",
-    ) -> tuple[HttpExecutor, list[float]]:
+    ) -> ExecutorSetup:
         queue = list(responses)
 
         def handler(request: httpx.Request) -> httpx.Response:
@@ -37,6 +45,6 @@ def make_executor() -> ExecutorFactory:
         client = httpx.Client(base_url="https://api.test", transport=httpx.MockTransport(handler))
         recorder = RecordingSleep()
         executor = HttpExecutor(client, retry or RetryPolicy(), token=token, sleep=recorder)
-        return executor, recorder.delays
+        return ExecutorSetup(executor=executor, delays=recorder.delays)
 
     return factory

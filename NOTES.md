@@ -21,6 +21,15 @@
 
 ## Where LLM assistance helped and where it misled
 
-**Helped:** Boilerplate for Pydantic models, fixture structure, respx mock patterns, help make_executor factory.
+**Helped:** 
+ - Boilerplate for Pydantic models, 
+ - errors structure, 
+ - respx mock patterns, 
+ - help make_executor factory.
 
-**Misled:** The initial client used `GET /users/{id}/todos` for listing tasks — this endpoint does not exist on GoREST. The correct endpoint is `GET /todos?user_id={id}`. It also assumed `GET /users/{id}` was unauthenticated, which caused 404s in integration tests — GoREST requires a token for individual user lookups. Some of created code was unnecessary and could be simplified 
+**Misled:** 
+ - The initial client used `GET /users/{id}/todos` for listing tasks — this endpoint does not exist on GoREST. The correct endpoint is `GET /todos?user_id={id}`. 
+ - It assumed `GET /users/{id}` was unauthenticated, which caused 404s in integration tests — GoREST requires a token for individual user lookups. 
+ - Some of created code was unnecessary and could be simplified
+ - A lot of unuseful comments
+ - Misleading typing in few places
